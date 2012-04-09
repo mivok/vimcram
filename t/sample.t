@@ -30,3 +30,7 @@ Test regex matching on part of the line
 Test regex anchor matching
 
     ^This is a re
+
+Test very magic option (allows + to be unescaped)
+
+    \v^Th[si]+ re
