@@ -34,3 +34,26 @@ Test regex anchor matching
 Test very magic option (allows + to be unescaped)
 
     \v^Th[si]+ re
+
+Perform a line specific comparison
+
+    > This is line 2
+    > This is line 3
+    > This is line 4
+    (1) This is a test
+    (3) This is line 3
+
+Perform a line specific regex comparison
+
+    (2) line 2 re
+
+Symbolic lines (delete last blank line first)
+
+    @Gddgg
+    (.) This is a test
+    ($) This is line 4
+
+Compare multiple lines, only specifying line number for the first
+
+    (2) This is line 2
+    This is line 3

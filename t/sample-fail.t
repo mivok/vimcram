@@ -15,3 +15,8 @@ comparison text.
 the line
 
     ^is a$ re
+
+(Fails) Match multiple lines starting with the end of the file:
+
+    ($)
+    foo

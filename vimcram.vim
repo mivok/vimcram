@@ -67,31 +67,49 @@ function! s:CompareExpectedOutput(output)
         return
     endif
     let curr_line = 1
-    let match_fail = 0
+    let whole_buffer = 1 " Is the comparison against the entire buffer?
     call s:Debug("Comparing output")
     for line in a:output
+        " The prefix holds anything that was part of line we want to compare,
+        " but not what we want to use as part of the comparison, such as a
+        " line number specification.
+        let prefix = ""
+        let per_line = matchlist(line, '\v^\(([0-9]+|\.|\$)\) ?')
+        if !empty(per_line)
+            " Output is matching a specific line
+            let whole_buffer = 0 " Don't match entire buffer if line num given
+            let prefix = per_line[0]
+            let line = line[len(per_line[0]):]
+            let curr_line = line(per_line[1])
+            if curr_line == 0
+                " Line number wasn't symbolic, so it must be a number
+                let curr_line = per_line[1]
+            endif
+            call s:Debug("Comparing buffer line ".curr_line)
+        endif
+
         if line[-3:] == ' re'
             " Regexp line (try normal match first)
             if line == getline(curr_line)
                 " Plain match succeeded
                 call s:Debug("Plain match succeeded on regex line")
-                call s:Output("    ".line)
+                call s:Output("    ".prefix.line)
             elseif match(getline(curr_line), line[:-4]) != -1
                 " If we succeed, print out the original regex
                 call s:Debug("Regex match succeeded on regex line")
-                call s:Output("    ".line)
+                call s:Output("    ".prefix.line)
             else
                 call s:Debug("Regex match failed")
                 " If we fail a regex check, print the text that failed to
                 " match in the output
-                call s:Output("    ".getline(curr_line))
+                call s:Output("    ".prefix.getline(curr_line))
             endif
         else
             " Normal line
             if line != getline(curr_line)
                 call s:Debug("Regular line match failed")
             endif
-            call s:Output("    ".getline(curr_line))
+            call s:Output("    ".prefix.getline(curr_line))
         endif
         let curr_line = curr_line + 1
     endfor
@@ -100,7 +118,7 @@ function! s:CompareExpectedOutput(output)
     if getline('$') == '' && a:output[-1] != ''
         let lastline = lastline - 1
     endif
-    if curr_line <= lastline
+    if whole_buffer && curr_line <= lastline
         call s:Debug("Failed to match entire buffer")
         for line in getline(curr_line, lastline)
             call s:Output("    ".line)
