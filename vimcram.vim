@@ -63,21 +63,49 @@ endfunction
 function! s:CompareExpectedOutput(output)
     " Compare buffer contents with expected output
     if len(a:output) == 0
+        " Skip if there's no output to compare
         return
     endif
-    let lastline = line('$')
+    let curr_line = 1
+    let match_fail = 0
+    call s:Debug("Comparing output")
+    for line in a:output
+        if line[-3:] == ' re'
+            " Regexp line (try normal match first)
+            if line == getline(curr_line)
+                " Plain match succeeded
+                call s:Debug("Plain match succeeded on regex line")
+                call s:Output("    ".line)
+            elseif match(getline(curr_line), line[:-4])
+                " If we succeed, print out the original regex
+                call s:Debug("Regex match succeeded on regex line")
+                call s:Output("    ".line)
+            else
+                call s:Debug("Regex match failed")
+                " If we fail a regex check, print the text that failed to
+                " match in the output
+                call s:Output("    ".getline(curr_line))
+            endif
+        else
+            " Normal line
+            if line != getline(curr_line)
+                call s:Debug("Regular line match failed")
+            endif
+            call s:Output("    ".getline(curr_line))
+        endif
+        let curr_line = curr_line + 1
+    endfor
     " Hack to not compare a trailing blank line
+    let lastline = line('$')
     if getline('$') == '' && a:output[-1] != ''
         let lastline = lastline - 1
     endif
-    call s:Debug("Comparing output")
-    if a:output != getline(1,lastline)
-        call s:Debug("Test failure: output doesn't match")
+    if curr_line <= lastline
+        call s:Debug("Failed to match entire buffer")
+        for line in getline(curr_line, lastline)
+            call s:Output("    ".line)
+        endfor
     endif
-    " Write the actual output to the file
-    for line in getline(1,lastline)
-        call s:Output("    ".line)
-    endfor
 endfunction
 " }}}
 
