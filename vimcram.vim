@@ -46,6 +46,10 @@ function! s:ShowResults(filename)
     exe "edit ".a:filename.".results"
     if empty(output)
         call setline(".", "All tests succeeded")
+        if g:vimcram_debug
+            call append(".", readfile(a:filename.".out"))
+            call append(".", ["", "Test output follows:"])
+        endif
     else
         call setline(".", "One or more tests failed. Diff follows:")
         call append(".", split(output, "\n"))
