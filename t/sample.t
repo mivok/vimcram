@@ -23,7 +23,7 @@ Test plain matching with a line that ends in re
 
 Test regex matching on part of the line
 
-    @ggdG
+    :silent %d
     > This is a test
     is a re
 
