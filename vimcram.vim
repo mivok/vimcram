@@ -37,7 +37,8 @@ endfunction
 " }}}
 " s:ShowResults {{{
 function! s:ShowResults(filename)
-    let output = system("diff -u ".a:filename." ".a:filename.".out")
+    let output = system("diff -u ".a:filename.
+        \" <(grep -v ^DEBUG: ".a:filename.".out)")
     set nomodified " Test output text buffer, allows quit without !
     exe "edit ".a:filename.".results"
     if empty(output)
