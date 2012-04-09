@@ -45,15 +45,16 @@ function! s:ShowResults(filename)
     set nomodified " Test output text buffer, allows quit without !
     exe "edit ".a:filename.".results"
     if empty(output)
-        call setline(".", "All tests succeeded")
-        if g:vimcram_debug
-            call append(".", readfile(a:filename.".out"))
-            call append(".", ["", "Test output follows:"])
-        endif
+        call setline(".", "\# All tests succeeded")
     else
-        call setline(".", "One or more tests failed. Diff follows:")
-        call append(".", split(output, "\n"))
+        call setline(".", "\# One or more tests failed")
+        call append("$", ["", "\#\# Diff:", ""])
+        call append("$", split(output, "\n"))
         setlocal ft=diff
+    endif
+    if g:vimcram_debug
+        call append("$", ["", "\#\# Test output:", ""])
+        call append("$", readfile(a:filename.".out"))
     endif
     set nomodified " Test results text buffer, allow quit without !
 endfunction
