@@ -4,6 +4,18 @@
 " Debug mode
 let s:debug = 0
 
+" Utility functions
+" s:RemoveCommandChars {{{
+function! s:RemoveCommandChars(line)
+    " Removes leading >, : or @, and removes any single space that follows
+    if a:line[1] == ' '
+        return a:line[2:]
+    else
+        return a:line[1:]
+    endif
+endfunction
+" }}}
+
 " Output/results functions
 " s:Output {{{
 let s:testout = []
@@ -84,15 +96,15 @@ function! s:RunTest(filename)
         if line[0] == ':'
             " Command
             call s:Output("    ".line)
-            exe line[1:]
+            exe s:RemoveCommandChars(line)
         elseif line[0] == '>'
             " Text to insert
             call s:Output("    ".line)
-            call append(line('.') - 1, line[1:])
+            call append(line('.') - 1, s:RemoveCommandChars(line))
         elseif line[0] == '@'
             " Normal mode commands
             call s:Output("    ".line)
-            exe "normal ".line[1:]
+            exe "normal ".s:RemoveCommandChars(line)
         else
             call add(output, line)
         endif
