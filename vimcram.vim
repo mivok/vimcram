@@ -1,8 +1,11 @@
 " Start vim with '-N -u NONE' to avoid sourcing user files
 " vim:foldmethod=marker
 
-" Debug mode
-let s:debug = 0
+" Debug mode setting {{{
+if !exists("g:vimcram_debug")
+    let g:vimcram_debug = 0
+endif
+" }}}
 
 " Utility functions
 " s:RemoveCommandChars {{{
@@ -25,7 +28,7 @@ endfunction
 " }}}
 " s:Debug {{{
 function s:Debug(line)
-    if s:debug
+    if g:vimcram_debug
         call s:Output("DEBUG: ".a:line)
     endif
 endfunction
