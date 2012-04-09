@@ -76,7 +76,7 @@ function! s:CompareExpectedOutput(output)
                 " Plain match succeeded
                 call s:Debug("Plain match succeeded on regex line")
                 call s:Output("    ".line)
-            elseif match(getline(curr_line), line[:-4])
+            elseif match(getline(curr_line), line[:-4]) != -1
                 " If we succeed, print out the original regex
                 call s:Debug("Regex match succeeded on regex line")
                 call s:Output("    ".line)
