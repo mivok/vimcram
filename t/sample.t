@@ -1,5 +1,3 @@
-Notes: -N -u NONE to start vim without a .vimrc
-
 Insert text
 
     > foo

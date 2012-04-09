@@ -1,4 +1,3 @@
-" Start vim with '-N -u NONE' to avoid sourcing user files
 " vim:foldmethod=marker
 
 " Debug mode setting {{{
