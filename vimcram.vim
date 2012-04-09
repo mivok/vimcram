@@ -17,6 +17,22 @@ function! s:RemoveCommandChars(line)
     endif
 endfunction
 " }}}
+" s:NewScratchBuffer - Create a new buffer {{{1
+function! s:NewScratchBuffer(name)
+    " Set the buffer name
+    let name="[".a:name."]"
+    if !has("win32")
+        let name = escape(name, "[]")
+    endif
+    " Switch buffers
+    exec "silent hide edit" name
+    " Set the new buffer properties to be a scratch buffer
+    setlocal bufhidden=delete
+    setlocal buftype=nofile
+    setlocal modifiable
+    setlocal noswapfile
+endfunction
+"1}}}
 
 " Output/results functions
 " s:Output {{{
@@ -42,7 +58,7 @@ function! s:ShowResults(filename)
     let output = system("diff -u ".a:filename.
         \" <(grep -v ^DEBUG: ".a:filename.".out)")
     set nomodified " Test output text buffer, allows quit without !
-    exe "edit ".a:filename.".results"
+    call s:NewScratchBuffer("TestResults")
     if empty(output)
         call setline(".", "\# All tests succeeded")
     else
@@ -55,7 +71,6 @@ function! s:ShowResults(filename)
         call append("$", ["", "\#\# Test output:", ""])
         call append("$", readfile(a:filename.".out"))
     endif
-    set nomodified " Test results text buffer, allow quit without !
 endfunction
 " }}}
 
