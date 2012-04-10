@@ -1,2 +1,3 @@
 *.t.out
+*.t.dbg
 *.swp

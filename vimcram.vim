@@ -25,7 +25,7 @@ function! s:NewScratchBuffer(name)
         let name = escape(name, "[]")
     endif
     " Switch buffers
-    exec "silent hide edit" name
+    exec "silent hide edit " escape(name, ' \')
     " Set the new buffer properties to be a scratch buffer
     setlocal bufhidden=delete
     setlocal buftype=nofile
@@ -35,42 +35,57 @@ endfunction
 "1}}}
 
 " Output/results functions
+" s:InitTestOutput {{{
+function s:InitTestOutput()
+    " Clear and initialize variables that store output
+    let s:testout = []
+    let s:debugout = []
+endfunction
+" }}}
 " s:Output {{{
-let s:testout = []
 function! s:Output(line)
     call add(s:testout, a:line)
+    if g:vimcram_debug
+        call add(s:debugout, a:line)
+    endif
 endfunction
 " }}}
 " s:Debug {{{
 function s:Debug(line)
     if g:vimcram_debug
-        call s:Output("DEBUG: ".a:line)
+        call add(s:debugout, "DEBUG: ".a:line)
     endif
 endfunction
 "}}}
 " s:WriteTestOut {{{
 function! s:WriteTestOut(filename)
     call writefile(s:testout, a:filename.".out")
+    if g:vimcram_debug
+        call writefile(s:debugout, a:filename.".dbg")
+    endif
 endfunction
 " }}}
 " s:ShowResults {{{
-function! s:ShowResults(filename)
-    let output = system("diff -u ".a:filename.
-        \" <(grep -v ^DEBUG: ".a:filename.".out)")
-    set nomodified " Test output text buffer, allows quit without !
+function! s:ShowResults(filenames)
     call s:NewScratchBuffer("TestResults")
-    if empty(output)
-        call setline(".", "\# All tests succeeded")
-    else
-        call setline(".", "\# One or more tests failed")
-        call append("$", ["", "\#\# Diff:", ""])
-        call append("$", split(output, "\n"))
-        setlocal ft=diff
-    endif
-    if g:vimcram_debug
-        call append("$", ["", "\#\# Test output:", ""])
-        call append("$", readfile(a:filename.".out"))
-    endif
+    for f in a:filenames
+        let output = system("diff -u ".escape(f, ' \').
+                    \" ".escape(f, ' \').".out")
+        if empty(output)
+            call append("$", "\# ".f." - All tests succeeded")
+        else
+            call append("$", "\# ".f." - One or more tests failed")
+            call append("$", ["", "\#\# Diff:", ""])
+            call append("$", split(output, "\n"))
+            setlocal ft=diff
+        endif
+        if g:vimcram_debug
+            call append("$", ["", "\#\# ".f." - Test debug output", ""])
+            call append("$", readfile(f.".dbg"))
+        endif
+        call append("$", "")
+    endfor
+    1d " Remove the first blank line
 endfunction
 " }}}
 
@@ -143,8 +158,18 @@ endfunction
 " }}}
 
 " Main function
+" s:RunTests {{{
+function! s:RunTests(...)
+    for f in a:000
+        call s:RunTest(f)
+    endfor
+    call s:ShowResults(a:000)
+endfunction
+" }}}
 " s:RunTest {{{
 function! s:RunTest(filename)
+    call s:NewScratchBuffer("Test ".a:filename) " Perform tests in new buffer
+    call s:InitTestOutput()
     let test_script = readfile(a:filename)
     let output = []
     for line in test_script
@@ -180,9 +205,8 @@ function! s:RunTest(filename)
     endfor
     call s:CompareExpectedOutput(output)
     call s:WriteTestOut(a:filename)
-    call s:ShowResults(a:filename)
 endfunction
 " }}}
 " RunTest command {{{
-command -nargs=1 RunTest :call s:RunTest(<args>)
+command -nargs=* RunTests :call s:RunTests(<f-args>)
 " }}}

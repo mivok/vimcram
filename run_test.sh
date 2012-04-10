@@ -31,9 +31,14 @@ if [[ -z $LOADRC ]]; then
     VIMOPTIONS="-N -u NONE" # Don't load user scripts or .vimrc
 fi
 
-VIMCOMMANDS="RunTest \"$1\""
+PRE_COMMANDS=""
 if [[ -n $DEBUG ]]; then
-    VIMCOMMANDS="let g:vimcram_debug=1 | $VIMCOMMANDS"
+    PRE_COMMANDS="let g:vimcram_debug=1"
 fi
 
-vim $VIMOPTIONS -S vimcram.vim -c "$VIMCOMMANDS"
+FILES=""
+for i in "$@"; do
+    # Escape spaces
+    FILES="$FILES ${i// /\\ }"
+done
+vim $VIMOPTIONS -S vimcram.vim -c "$PRE_COMMANDS" -c "RunTests $FILES"
