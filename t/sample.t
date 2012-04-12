@@ -57,3 +57,8 @@ Compare multiple lines, only specifying line number for the first
 
     (2) This is line 2
     This is line 3
+
+Verify an expression
+
+    :let g:some_var=1
+    ? g:some_var == 1

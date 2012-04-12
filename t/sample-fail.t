@@ -20,3 +20,8 @@ the line
 
     ($)
     foo
+
+(Fails) Verify the value of a variable
+
+    :let g:some_var = 2
+    ? g:some_var == 1

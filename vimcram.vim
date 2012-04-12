@@ -156,6 +156,17 @@ function! s:CompareExpectedOutput(output)
     endif
 endfunction
 " }}}
+" s:VerifyExpression {{{
+function! s:VerifyExpression(exp, orig_line)
+    if eval(a:exp)
+        " Expression matches
+        call s:Output("    " . a:orig_line)
+    else
+        " Expression doesn't match
+        call s:Output('    ? ' . eval(a:exp))
+    endif
+endfunction
+" }}}
 
 " Main function
 " s:RunTests {{{
@@ -183,7 +194,7 @@ function! s:RunTest(filename)
             continue
         endif
         let line = substitute(line, '^    ', '', '')
-        if index([':', '>', '@'], line[0]) != -1
+        if index([':', '>', '@', '?'], line[0]) != -1
             call s:CompareExpectedOutput(output)
             let output = []
         endif
@@ -199,6 +210,9 @@ function! s:RunTest(filename)
             " Normal mode commands
             call s:Output("    ".line)
             exe "normal ".s:RemoveCommandChars(line)
+        elseif line[0] == '?'
+            " Verify an expression
+            call s:VerifyExpression(s:RemoveCommandChars(line), line)
         else
             call add(output, line)
         endif
