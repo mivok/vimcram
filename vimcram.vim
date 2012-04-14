@@ -48,12 +48,18 @@ function s:InitTestOutput()
     let s:debugout = []
 endfunction
 " }}}
+" s:OutputList {{{
+function! s:OutputList(lines)
+    " Outputs a list as multiple lines
+    call extend(s:testout, a:lines)
+    if g:vimcram_debug
+        call extend(s:debugout, a:lines)
+    endif
+endfunction
+" }}}
 " s:Output {{{
 function! s:Output(line)
-    call add(s:testout, a:line)
-    if g:vimcram_debug
-        call add(s:debugout, a:line)
-    endif
+    call s:OutputList([a:line])
 endfunction
 " }}}
 " s:Debug {{{
@@ -116,7 +122,7 @@ endfunction
 " }}}
 
 " s:CompareExpectedOutput {{{
-function! s:CompareExpectedOutput(output)
+function! s:CompareExpectedOutput(output, raw_output)
     " Compare buffer contents with expected output
     if len(a:output) == 0
         " Skip if there's no output to compare
@@ -126,7 +132,9 @@ function! s:CompareExpectedOutput(output)
     let whole_buffer = 1 " Is the comparison against the entire buffer?
     let failed = 0
     call s:Debug("Comparing output")
-    for line in a:output
+    for idx in range(len(a:output))
+        let line = a:output[idx]
+        let raw_lines = a:raw_output[idx]
         " The prefix holds anything that was part of line we want to compare,
         " but not what we want to use as part of the comparison, such as a
         " line number specification.
@@ -157,11 +165,11 @@ function! s:CompareExpectedOutput(output)
             if line == getline(curr_line)
                 " Plain match succeeded
                 call s:Debug("Plain match succeeded on regex line")
-                call s:Output("    ".prefix.raw_line)
+                call s:OutputList(raw_lines)
             elseif match(getline(curr_line), line[:-4]) != -1
                 " If we succeed, print out the original regex
                 call s:Debug("Regex match succeeded on regex line")
-                call s:Output("    ".prefix.raw_line)
+                call s:OutputList(raw_lines)
             else
                 call s:Debug("Regex match failed")
                 " If we fail a regex check, print the text that failed to
@@ -176,7 +184,7 @@ function! s:CompareExpectedOutput(output)
                 let failed = 1
                 call s:Output("    ".prefix.getline(curr_line))
             else
-                call s:Output("    ".prefix.raw_line)
+                call s:OutputList(raw_lines)
             endif
         endif
         let curr_line = curr_line + 1
@@ -198,11 +206,11 @@ function! s:CompareExpectedOutput(output)
 endfunction
 " }}}
 " s:VerifyExpression {{{
-function! s:VerifyExpression(exp, orig_line)
+function! s:VerifyExpression(exp, raw_lines)
     let s:tests_ran[-1] += 1
     if eval(a:exp)
         " Expression matches
-        call s:Output("    " . a:orig_line)
+        call s:OutputList(a:raw_lines)
     else
         " Expression doesn't match
         call s:Output('    ? ' . eval(a:exp))
@@ -228,24 +236,33 @@ function! s:RunTest(filename)
     call s:InitTestOutput()
     let test_script = readfile(a:filename)
     let output = []
+    let raw_output = [] " Raw output text (no expanded line continuations)
     let old_line = ""
+    let raw_lines = [] " Current line(s) without expanded line continuations
     for linenum in range(len(test_script))
         let line = test_script[linenum]
         " Lines that aren't indented (and blank lines) are comments
         if line[0:3] != "    "
             " If a comment line comes after output, we should verify the
             " actual output here
-            call s:CompareExpectedOutput(output)
+            call s:CompareExpectedOutput(output, raw_output)
             let output = []
+            let raw_output = []
             call s:Output(line)
             continue
         endif
+        let raw_line = line
         let line = substitute(line, '^    ', '', '')
         " Deal with line continuations
         if old_line != "" && line[0] == '\'
             let line = old_line . line[1:]
             let old_line = ""
+            call add(raw_lines, raw_line)
             call s:Debug("Line continuation: " . line)
+        else
+            " We've not just done a line continuation, so reset the raw lines
+            " var to be just the current line.
+            let raw_lines = [raw_line]
         endif
         if linenum < (len(test_script) - 1) &&
             \ test_script[linenum + 1][:4] == '    \'
@@ -256,29 +273,32 @@ function! s:RunTest(filename)
             continue
         endif
         if index([':', '>', '@', '?'], line[0]) != -1
-            call s:CompareExpectedOutput(output)
+            call s:CompareExpectedOutput(output, raw_output)
             let output = []
+            let raw_output = []
         endif
         if line[0] == ':'
             " Command
-            call s:Output("    ".line)
+            call s:OutputList(raw_lines)
             exe s:RemoveCommandChars(line)
         elseif line[0] == '>'
             " Text to insert
-            call s:Output("    ".line)
+            call s:OutputList(raw_lines)
             exe "normal i". s:RemoveCommandChars(line) . "\<CR>"
         elseif line[0] == '@'
             " Normal mode commands
-            call s:Output("    ".line)
+            call s:OutputList(raw_lines)
             exe "normal ".s:RemoveCommandChars(line)
         elseif line[0] == '?'
             " Verify an expression
-            call s:VerifyExpression(s:RemoveCommandChars(line), line)
+            call s:VerifyExpression(s:RemoveCommandChars(line), raw_lines)
         else
             call add(output, line)
+            " Raw output is a nested list
+            call add(raw_output, raw_lines)
         endif
     endfor
-    call s:CompareExpectedOutput(output)
+    call s:CompareExpectedOutput(output, raw_output)
     call s:WriteTestOut(a:filename)
 endfunction
 " }}}

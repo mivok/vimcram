@@ -25,3 +25,14 @@ the line
 
     :let g:some_var = 2
     ? g:some_var == 1
+
+
+(Fails) Test line continuation in non-matching output text
+    @ggdG
+    > Some text here
+    Some text
+    \ not here
+
+(Fails) Test line continuation in failing expression tests
+    ? 1 + 1
+    \ == 3

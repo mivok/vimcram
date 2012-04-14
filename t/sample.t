@@ -81,9 +81,33 @@ Test a more complex expression involving today's date.
     > ds
     ($) ${strftime("%Y-%m-%d")}
 
-Test line continuations
+Test line continuation in inserted text
 
     @ggdG
     > Some text
     \ continued on another line
     Some text continued on another line
+
+Test line continuation in output text
+    @ggdG
+    > Some text here
+    Some text
+    \ here
+
+Test line continuation in expression tests
+    ? 1 + 1
+    \ == 2
+
+Test line continuation in normal mode
+
+    > Some text that will be deleted
+    @gg
+    \dG
+    > Some text
+    Some text
+
+Test line continuation in ex commands
+
+    :let g:test_line_cont = "abc"
+    \ . "defg"
+    ? g:test_line_cont == "abcdefg"
