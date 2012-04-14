@@ -1,4 +1,6 @@
 " vim:foldmethod=marker
+" Maintainer: Mark Harrison <mark@mivok.net>
+" License:    MIT/Expat - See LICENSE file for details
 
 " Debug mode setting {{{
 if !exists("g:vimcram_debug")

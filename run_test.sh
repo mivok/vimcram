@@ -1,4 +1,6 @@
 #!/bin/bash
+# Maintainer: Mark Harrison <mark@mivok.net>
+# License:    MIT/Expat - See LICENSE file for details
 
 DEBUG=
 LOADRC=
