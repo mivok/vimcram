@@ -41,4 +41,5 @@ for i in "$@"; do
     # Escape spaces
     FILES="$FILES ${i// /\\ }"
 done
-vim $VIMOPTIONS -S vimcram.vim -c "$PRE_COMMANDS" -c "RunTests $FILES"
+vim $VIMOPTIONS -S $(dirname $0)/vimcram.vim \
+    -c "$PRE_COMMANDS" -c "RunTests $FILES"
