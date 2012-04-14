@@ -145,16 +145,23 @@ function! s:CompareExpectedOutput(output)
             call s:Debug("Comparing buffer line ".curr_line)
         endif
 
+        " Expand any variables in the line
+        let raw_line = line
+        let line=substitute(line, '\${\([^}]\+\)}', '\=eval(submatch(1))', "g")
+        if line != raw_line
+            call s:Debug("Expanded line: " . line)
+        endif
+
         if line[-3:] == ' re'
             " Regexp line (try normal match first)
             if line == getline(curr_line)
                 " Plain match succeeded
                 call s:Debug("Plain match succeeded on regex line")
-                call s:Output("    ".prefix.line)
+                call s:Output("    ".prefix.raw_line)
             elseif match(getline(curr_line), line[:-4]) != -1
                 " If we succeed, print out the original regex
                 call s:Debug("Regex match succeeded on regex line")
-                call s:Output("    ".prefix.line)
+                call s:Output("    ".prefix.raw_line)
             else
                 call s:Debug("Regex match failed")
                 " If we fail a regex check, print the text that failed to
@@ -167,8 +174,10 @@ function! s:CompareExpectedOutput(output)
             if line != getline(curr_line)
                 call s:Debug("Regular line match failed")
                 let failed = 1
+                call s:Output("    ".prefix.getline(curr_line))
+            else
+                call s:Output("    ".prefix.raw_line)
             endif
-            call s:Output("    ".prefix.getline(curr_line))
         endif
         let curr_line = curr_line + 1
     endfor

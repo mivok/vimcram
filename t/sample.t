@@ -62,3 +62,14 @@ Verify an expression
 
     :let g:some_var=1
     ? g:some_var == 1
+
+Test expressions/variables in output
+
+    (2) This is line ${1+1}
+
+Test a more complex expression involving today's date. Currently you need to
+use normal mode commands for abbreviations to work, hence the @Go command.
+
+    :iab ds <C-R>=strftime("%Y-%m-%d")
+    @Gods
+    ($) ${strftime("%Y-%m-%d")}
