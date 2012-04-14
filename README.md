@@ -1,4 +1,46 @@
-# Vim Cram - better unit testing with vim
+# Vimcram - better testing with vim
+
+Vimcram is a functional testing framework intended make testing in vim as easy
+as [cram](https://bitheap.org/cram/) makes testing shell scripts.
+
+It tries to mirror cram's test format of looking like a transcript of an
+interactive session. Tests in vimcram look like this:
+
+    Test substituting text:
+
+        > Add some text
+        > Add some more text
+        :%s/some //
+        Add text
+        Add more text
+
+    Test normal mode commands
+
+        @ggdW
+        @jdW
+        text
+        more text
+
+# Installation/Usage
+
+Just clone the git repository/untar to wherever you want.
+
+If you want to include vimcram with your tests, you just need the run_test.sh
+and vimcram.vim files (and a copy of the license file somehwere), and they can
+be placed in the same directory as the tests themselves if desired.
+
+To run a test, simply use the run_test.sh script:
+
+    ./run_test.sh t/test001.t
+
+or to run multiple tests:
+
+    ./run_test.sh t/*.t
+
+Vimcram will then run the tests, and display a test report showing how many
+tests were run and how many succeeded/failed. If any tests fail, a diff will
+be shown of the test output and the test script, showing where any problems
+lie.
 
 # Test file format
 
@@ -8,7 +50,7 @@ The test file format is based on that used in cram:
  * Lines beginning with four spaces, a colon (:), and optionally a space are
    executed as a vim ex command.
  * Lines beginning with four spaces, a greater than sign (>), and optionally a
-   space are inserted as text to the bottom of the file.
+   space are inserted as text.
  * Lines beginning with four spaces, an at sign (@), and optionally a space
    are executed as normal mode commands.
  * All other lines beginning with four spaces are considered to be output
@@ -32,3 +74,21 @@ The test file format is based on that used in cram:
  * If the final line of a file is blank, then it is ignored when comparing the
    entire buffer contents.
  * Anything else is a comment.
+
+# Test output
+
+Vimcram generates an output file which should be identical to the input script
+if all tests pass. If any test fails, then the output file will differ. In the
+case where you are comparing buffer output, the output file will print what
+was actually found. This should make it easy to change the test if the
+behavior of the script you're testing has changed. For tests where it's not a
+simple text comparison, the output tries to be as sensible as possible:
+
+ * For regular expression tests, just the actual output that was found is
+   shown instead.
+ * For line specific tests, the actual output of the line is shown, and the
+   prefix specifying the line number is kept.
+ * For expression tests (? foo == bar), the result of the expression (usually
+   1 or 0) is printed after the question mark.
+ * If any expressions are included in the output text in a test (${foo}), then
+   the expanded value is printed in the output for failing tests.
