@@ -80,3 +80,10 @@ Test a more complex expression involving today's date.
     :iab ds <C-R>=strftime("%Y-%m-%d")
     > ds
     ($) ${strftime("%Y-%m-%d")}
+
+Test line continuations
+
+    @ggdG
+    > Some text
+    \ continued on another line
+    Some text continued on another line

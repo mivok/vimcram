@@ -228,7 +228,9 @@ function! s:RunTest(filename)
     call s:InitTestOutput()
     let test_script = readfile(a:filename)
     let output = []
-    for line in test_script
+    let old_line = ""
+    for linenum in range(len(test_script))
+        let line = test_script[linenum]
         " Lines that aren't indented (and blank lines) are comments
         if line[0:3] != "    "
             " If a comment line comes after output, we should verify the
@@ -239,6 +241,20 @@ function! s:RunTest(filename)
             continue
         endif
         let line = substitute(line, '^    ', '', '')
+        " Deal with line continuations
+        if old_line != "" && line[0] == '\'
+            let line = old_line . line[1:]
+            let old_line = ""
+            call s:Debug("Line continuation: " . line)
+        endif
+        if linenum < (len(test_script) - 1) &&
+            \ test_script[linenum + 1][:4] == '    \'
+            " If the next line is a continuation of this, store the current
+            " line and let the next iteration deal with stiching the line
+            " together
+            let old_line = line
+            continue
+        endif
         if index([':', '>', '@', '?'], line[0]) != -1
             call s:CompareExpectedOutput(output)
             let output = []
