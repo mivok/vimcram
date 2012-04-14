@@ -67,9 +67,16 @@ Test expressions/variables in output
 
     (2) This is line ${1+1}
 
-Test a more complex expression involving today's date. Currently you need to
-use normal mode commands for abbreviations to work, hence the @Go command.
+Test abbreviations when inserting
 
+    @ggdG
+    :iab foo bar
+    > foo
+    bar
+
+Test a more complex expression involving today's date.
+
+    @ggdG
     :iab ds <C-R>=strftime("%Y-%m-%d")
-    @Gods
+    > ds
     ($) ${strftime("%Y-%m-%d")}

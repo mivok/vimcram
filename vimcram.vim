@@ -250,7 +250,7 @@ function! s:RunTest(filename)
         elseif line[0] == '>'
             " Text to insert
             call s:Output("    ".line)
-            call append(line('.') - 1, s:RemoveCommandChars(line))
+            exe "normal i". s:RemoveCommandChars(line) . "\<CR>"
         elseif line[0] == '@'
             " Normal mode commands
             call s:Output("    ".line)
