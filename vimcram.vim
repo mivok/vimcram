@@ -6,6 +6,12 @@ if !exists("g:vimcram_debug")
 endif
 " }}}
 
+" Variables
+" {{{
+let s:tests_ran = []
+let s:tests_failed = []
+" }}}
+
 " Utility functions
 " s:RemoveCommandChars {{{
 function! s:RemoveCommandChars(line)
@@ -68,13 +74,32 @@ endfunction
 " s:ShowResults {{{
 function! s:ShowResults(filenames)
     call s:NewScratchBuffer("TestResults")
+    let total_tests_ran = 0
+    let total_tests_failed = 0
+    let testfiles_failed = 0
+    let testfiles_ran = len(s:tests_ran)
+    for t in s:tests_ran
+        let total_tests_ran += t
+    endfor
+    for t in s:tests_failed
+        let total_tests_failed += t
+        if t > 0
+            let testfiles_failed += 1
+        endif
+    endfor
+    call append("$", ["\# Test summary", "",
+        \testfiles_ran - testfiles_failed . "/" . testfiles_ran .
+        \" test files with no failed tests",
+        \total_tests_ran - total_tests_failed . "/" . total_tests_ran .
+        \" tests succeeded", ""])
+    let test_num = 0
     for f in a:filenames
         let output = system("diff -u ".escape(f, ' \').
                     \" ".escape(f, ' \').".out")
-        if empty(output)
-            call append("$", "\# ".f." - All tests succeeded")
-        else
-            call append("$", "\# ".f." - One or more tests failed")
+        call append("$", "\# ".f." - " . (s:tests_ran[test_num] -
+                    \s:tests_failed[test_num]) . "/" . s:tests_ran[test_num] .
+                    \" tests succeeded")
+        if !empty(output)
             call append("$", ["", "\#\# Diff:", ""])
             call append("$", split(output, "\n"))
             setlocal ft=diff
@@ -84,6 +109,7 @@ function! s:ShowResults(filenames)
             call append("$", readfile(f.".dbg"))
         endif
         call append("$", "")
+        let test_num += 1
     endfor
     1d " Remove the first blank line
 endfunction
@@ -98,6 +124,7 @@ function! s:CompareExpectedOutput(output)
     endif
     let curr_line = 1
     let whole_buffer = 1 " Is the comparison against the entire buffer?
+    let failed = 0
     call s:Debug("Comparing output")
     for line in a:output
         " The prefix holds anything that was part of line we want to compare,
@@ -132,12 +159,14 @@ function! s:CompareExpectedOutput(output)
                 call s:Debug("Regex match failed")
                 " If we fail a regex check, print the text that failed to
                 " match in the output
+                let failed = 1
                 call s:Output("    ".prefix.getline(curr_line))
             endif
         else
             " Normal line
             if line != getline(curr_line)
                 call s:Debug("Regular line match failed")
+                let failed = 1
             endif
             call s:Output("    ".prefix.getline(curr_line))
         endif
@@ -153,17 +182,22 @@ function! s:CompareExpectedOutput(output)
         for line in getline(curr_line, lastline)
             call s:Output("    ".line)
         endfor
+        let failed = 1
     endif
+    let s:tests_ran[-1] += 1
+    let s:tests_failed[-1] += failed
 endfunction
 " }}}
 " s:VerifyExpression {{{
 function! s:VerifyExpression(exp, orig_line)
+    let s:tests_ran[-1] += 1
     if eval(a:exp)
         " Expression matches
         call s:Output("    " . a:orig_line)
     else
         " Expression doesn't match
         call s:Output('    ? ' . eval(a:exp))
+        let s:tests_failed[-1] += 1
     endif
 endfunction
 " }}}
@@ -172,6 +206,8 @@ endfunction
 " s:RunTests {{{
 function! s:RunTests(...)
     for f in a:000
+        call add(s:tests_ran, 0)
+        call add(s:tests_failed, 0)
         call s:RunTest(f)
     endfor
     call s:ShowResults(a:000)
