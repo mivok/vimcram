@@ -138,3 +138,5 @@ should be matched). Makes use of text already inserted from previous test.
 
     ${g:test_foo}
     :let g:vimcram_expandvars = 1
+
+vim: ft=vimcram

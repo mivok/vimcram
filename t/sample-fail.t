@@ -36,3 +36,5 @@ the line
 (Fails) Test line continuation in failing expression tests
     ? 1 + 1
     \ == 3
+
+vim: ft=vimcram
