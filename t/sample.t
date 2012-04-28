@@ -111,3 +111,30 @@ Test line continuation in ex commands
     :let g:test_line_cont = "abc"
     \ . "defg"
     ? g:test_line_cont == "abcdefg"
+
+Test variable expansion in output
+
+    @ggdG
+    :let g:test_foo = "hello"
+    > hello
+    ${g:test_foo}
+
+Test variable expansion during insert
+
+    @ggdG
+    > ${g:test_foo}
+    hello
+
+Test disabling variable expansion during insert (a literal ${g:test_foo}
+should be inserted)
+
+    @ggdG
+    :let g:vimcram_expandvars = 0
+    > ${g:test_foo}
+    test_foo}$ re
+
+Test disabling variable expansion in output (a literal ${g:test_foo}
+should be matched). Makes use of text already inserted from previous test.
+
+    ${g:test_foo}
+    :let g:vimcram_expandvars = 1

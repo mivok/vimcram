@@ -12,6 +12,8 @@ endif
 " {{{
 let s:tests_ran = []
 let s:tests_failed = []
+
+let g:vimcram_expandvars = 1 " Perform ${foo} expansion
 " }}}
 
 " Utility functions
@@ -41,6 +43,20 @@ function! s:NewScratchBuffer(name)
     setlocal noswapfile
 endfunction
 "1}}}
+" s:ExpandLine - Expand expressions of the form ${expression} {{{
+function! s:ExpandLine(line)
+    if ! g:vimcram_expandvars
+        return a:line
+    endif
+
+    let raw_line = a:line
+    let line=substitute(a:line, '\${\([^}]\+\)}', '\=eval(submatch(1))', "g")
+    if line != raw_line
+        call s:Debug("Expanded line: " . line)
+    endif
+    return line
+endfunction
+" }}}
 
 " Output/results functions
 " s:InitTestOutput {{{
@@ -155,12 +171,8 @@ function! s:CompareExpectedOutput(output, raw_output)
             call s:Debug("Comparing buffer line ".curr_line)
         endif
 
-        " Expand any variables in the line
-        let raw_line = line
-        let line=substitute(line, '\${\([^}]\+\)}', '\=eval(submatch(1))', "g")
-        if line != raw_line
-            call s:Debug("Expanded line: " . line)
-        endif
+        " Expand any variables/expressions in the line
+        let line = s:ExpandLine(line)
 
         if line[-3:] == ' re'
             " Regexp line (try normal match first)
@@ -286,7 +298,7 @@ function! s:RunTest(filename)
         elseif line[0] == '>'
             " Text to insert
             call s:OutputList(raw_lines)
-            exe "normal i". s:RemoveCommandChars(line) . "\<CR>"
+            exe "normal i". s:ExpandLine(s:RemoveCommandChars(line)) . "\<CR>"
         elseif line[0] == '@'
             " Normal mode commands
             call s:OutputList(raw_lines)
