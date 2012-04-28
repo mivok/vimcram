@@ -139,4 +139,14 @@ should be matched). Makes use of text already inserted from previous test.
     ${g:test_foo}
     :let g:vimcram_expandvars = 1
 
+Test disabling line specific matching
+
+    :let g:vimcram_per_line = 0
+    @ggdG
+    > (2) some text
+    > (3) some more text
+    (2) some text
+    (3) some more text
+    :let g:vimcram_per_line = 1
+
 vim: ft=vimcram

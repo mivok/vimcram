@@ -8,12 +8,15 @@ if !exists("g:vimcram_debug")
 endif
 " }}}
 
-" Variables
+" Variables/global settings
 " {{{
+let g:vimcram_expandvars = 1 " Perform ${foo} expansion
+let g:vimcram_expandre = 1   " Perform regex expansion
+let g:vimcram_per_line = 1   " Recognize per-line output
+" }}}
+" Script-local variables {{{
 let s:tests_ran = []
 let s:tests_failed = []
-
-let g:vimcram_expandvars = 1 " Perform ${foo} expansion
 " }}}
 
 " Utility functions
@@ -158,7 +161,7 @@ function! s:CompareExpectedOutput(output, raw_output)
         " line number specification.
         let prefix = ""
         let per_line = matchlist(line, '\v^\(([0-9]+|\.|\$)\) ?')
-        if !empty(per_line)
+        if !empty(per_line) && g:vimcram_per_line == 1
             " Output is matching a specific line
             let whole_buffer = 0 " Don't match entire buffer if line num given
             let prefix = per_line[0]
@@ -174,7 +177,7 @@ function! s:CompareExpectedOutput(output, raw_output)
         " Expand any variables/expressions in the line
         let line = s:ExpandLine(line)
 
-        if line[-3:] == ' re'
+        if line[-3:] == ' re' && g:vimcram_expandre == 1
             " Regexp line (try normal match first)
             if line == getline(curr_line)
                 " Plain match succeeded

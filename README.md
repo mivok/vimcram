@@ -21,7 +21,7 @@ interactive session. Tests in vimcram look like this:
         text
         more text
 
-# Installation/Usage
+## Installation/Usage
 
 Just clone the git repository/untar to wherever you want.
 
@@ -42,7 +42,7 @@ tests were run and how many succeeded/failed. If any tests fail, a diff will
 be shown of the test output and the test script, showing where any problems
 lie.
 
-# Test file format
+## Test file format
 
 The test file format is based on that used in cram:
 
@@ -69,14 +69,49 @@ The test file format is based on that used in cram:
    literally with actual command output.
  * Output lines and insert lines containing a dollar sign followed by an
    expression inside curly brackets (${...}) will have the expression
-   expanded. This allows for output to be dependent on the current
-   environment, such as output containing today's date. This behaivor can be
-   disabled by setting the `g:vimcram_expandvars` variable to 0.
+   expanded.
  * If the final line of a file is blank, then it is ignored when comparing the
    entire buffer contents.
  * Anything else is a comment.
 
-# Test output
+### Overriding behavior
+
+Most of the special behavior above can be disabled by setting various
+variables inside your tests. An example of where this would be useful is if
+you are finding that you don't need the variable expansion feature, but you do
+have a lot of text that looks like ${...} in your test input/output.
+
+The following variables currently affect vimcram's behavior. Set them to 0 to
+disable, and back to 1 to re-enable:
+
+ * g:vimcram_expandvars - enable/disable expanding of ${...} expressions
+ * g:vimcram_expandre - enable/disable regular expression matches
+ * g:vimcram_per_line - enable/disable line specific matching with `(linenum)`
+   at the beginning of an output line.
+
+Example:
+
+    Don't expand anything inside ${...}
+
+        :let g:vimcram_expandvars = 0
+
+    Type in the start of a shell script
+
+        > #!/bin/bash
+        > BAR=1
+        > BAZ=2
+        > FOO=${BAR}${BAZ}
+
+    Now check the contents of line 4 (${BAR}${BAZ} should have been inserted
+    literally and vimcram shouldn't have tried to expand them)
+
+        (4) BAR.*BAZ re
+
+    We can re-enable variable expansion if desired
+
+        :let g:vimcram_expandvars = 1
+
+## Test output
 
 Vimcram generates an output file which should be identical to the input script
 if all tests pass. If any test fails, then the output file will differ. In the
