@@ -139,6 +139,8 @@ function! s:ShowResults(filenames)
         let test_num += 1
     endfor
     1d " Remove the first blank line
+    syntax on
+    set ft=vimcramreport
 endfunction
 " }}}
 

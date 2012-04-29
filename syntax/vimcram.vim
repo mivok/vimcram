@@ -7,20 +7,26 @@ if exists("b:current_syntax")
   finish
 endif
 
-syn include     @vimscript      syntax/vim.vim
+runtime! syntax/vim.vim
+unlet b:current_syntax
 
 syn match       vcComment       /^\S.*$/
 syn match       vcContinue      /^    \\/
 syn region      vcExCmd         start=/^    :/ end=/^    [^\\]/me=e-5
-    \ end=/^[^ ]/me=e-1 end=/^$/ contains=vcContinue,@vimscript
+    \ end=/^[^ ]/me=e-1 end=/^$/ contains=vcContinue,vimAddress,vimAutoCmd,vimCommand,vimExtCmd,vimFilter,vimLet,vimMap,vimMark,vimSet,vimSyntax,vimUserCmd
 syn region      vcNoCmd         start=/^    @/ end=/^    [^\\]/me=e-5
     \ end=/^[^ ]/me=e-1 end=/^$/ contains=vcContinue
 syn region      vcExpression    start=/^    ?/ end=/^    [^\\]/me=e-5
-    \ end=/^[^ ]/me=e-1 end=/^$/ contains=vcContinue
+    \ end=/^[^ ]/me=e-1 end=/^$/
+    \ contains=vcContinue,vimVar,vimFuncVar,vimString,vimNumber
 syn region      vcInsert        start=/^    >/ end=/^    [^\\]/me=e-5
-    \ end=/^[^ ]/me=e-1 end=/^$/ contains=vcContinue
-syn match       vcRegex         / re$/
-syn match       vcOutput        /^    [^@:?>].*$/ contains=vcRegex
+    \ end=/^[^ ]/me=e-1 end=/^$/ contains=vcContinue,vcExpand
+syn match       vcRegex         / re$/ contained
+syn match       vcPerLine       /^ *([^)]\+)/ contained
+syn match       vcExpand        /\${[^}]\+}/ contained
+    \ contains=vimVar,vimFuncVar,vimString,vimNumber
+syn match       vcOutput        /^    [^@:?>].*$/
+    \ contains=vcRegex,vcPerLine,vcExpand
 
 hi def link     vcComment       Comment
 hi def link     vcContinue      Special
@@ -30,5 +36,7 @@ hi def link     vcNoCmd         Statement
 hi def link     vcExpression    Statement
 hi def link     vcInsert        Statement
 hi def link     vcOutput        String
+hi def link     vcPerLine       PreProc
+hi def link     vcExpand        Keyword
 
 let b:current_syntax = "vimcram"
